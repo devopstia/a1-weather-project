@@ -39,6 +39,7 @@ pipeline {
                     dir("${WORKSPACE}/code/auth") {
                         sh """
                             cat Dockerfile
+                            sudo docker images
                         """
                     }
                 }
