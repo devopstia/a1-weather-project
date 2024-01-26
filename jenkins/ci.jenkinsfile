@@ -40,6 +40,17 @@ pipeline {
                 }
             }
         }
+        stage("Login Into Docker Hub"){
+             steps {
+              withCredentials([
+                usernamePassword(credentialsId: 'docker-hub-access', 
+                usernameVariable: 'DOCKER_HUB_USERNAME', 
+                passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                  def dockerLoginCmd = "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                    sh dockerLoginCmd
+                }
+            }
+        }
         stage('SonarQube Analysis') {
             steps {
                 dir("${WORKSPACE}/application/code") {
