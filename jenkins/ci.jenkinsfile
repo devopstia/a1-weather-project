@@ -170,10 +170,11 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code")
+                    dir("${WORKSPACE}/code") {
                         sh """
-                            rm -rf *
+                            sudo rm -rf *
                         """
+                    }
                 }
             }
         }
