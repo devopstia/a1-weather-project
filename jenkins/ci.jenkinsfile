@@ -33,6 +33,18 @@ pipeline {
                 }
             }
         }
+        stage('SonarQube Analysis') {
+            steps {
+                dir("${WORKSPACE}/code") {
+                    script {
+                        withSonarQubeEnv('SonarScanner') {
+                            // sh "sonar-scanner"
+                            sh "sonar-scanner --version"
+                        }
+                    }
+                }
+            }
+        }
         stage('Building Auth') {
             steps {
                 script {
