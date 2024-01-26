@@ -25,7 +25,7 @@ pipeline {
         }
         stage ('Checkout') {
             steps {
-                dir("${WORKSPACE}/code") {
+                dir("${WORKSPACE}/application") {
                     checkout([
                         $class: 'GitSCM',
                         branches: [[name: "*/${params.BRANCH_NAME}"]],
@@ -42,11 +42,10 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                dir("${WORKSPACE}/code") {
+                dir("${WORKSPACE}/application/code") {
                     script {
                         withSonarQubeEnv('SonarScanner') {
-                            // sh "sonar-scanner"
-                            sh "sonar-scanner --version"
+                            sh "sonar-scanner"
                         }
                     }
                 }
@@ -55,7 +54,7 @@ pipeline {
         stage('Building Auth') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code/auth") {
+                    dir("${WORKSPACE}/application/auth") {
                         sh """
                             cat Dockerfile
                             sudo docker images
@@ -67,7 +66,7 @@ pipeline {
         stage('Building DB') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code/db") {
+                    dir("${WORKSPACE}/application/db") {
                         sh """
                             cat Dockerfile
                             sudo docker images
@@ -79,7 +78,7 @@ pipeline {
         stage('Building Redis') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code/redis") {
+                    dir("${WORKSPACE}/application/redis") {
                         sh """
                             cat Dockerfile
                             sudo docker images
@@ -91,7 +90,7 @@ pipeline {
         stage('Building UI') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code/ui") {
+                    dir("${WORKSPACE}/application/ui") {
                         sh """
                             cat Dockerfile
                             sudo docker images
@@ -103,7 +102,7 @@ pipeline {
         stage('Building Weather') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code/weather") {
+                    dir("${WORKSPACE}/application/weather") {
                         sh """
                             cat Dockerfile
                             sudo docker images
@@ -115,7 +114,7 @@ pipeline {
         stage('Pushing Auth') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker images
                         """
@@ -126,7 +125,7 @@ pipeline {
         stage('Pushing DB') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker images
                         """
@@ -137,7 +136,7 @@ pipeline {
         stage('Pushing Redis') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker images
                         """
@@ -148,7 +147,7 @@ pipeline {
         stage('Pushing UI') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker images
                         """
@@ -159,7 +158,7 @@ pipeline {
         stage('Pushing Weather') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker images
                         """
@@ -170,7 +169,7 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
-                    dir("${WORKSPACE}/code") {
+                    dir("${WORKSPACE}/application") {
                         sh """
                             sudo rm -rf *
                         """
