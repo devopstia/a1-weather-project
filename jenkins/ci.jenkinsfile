@@ -16,6 +16,13 @@ pipeline {
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: '')
     }
     stages {
+        stage('Sanity Check') {
+            steps {
+                script{
+                   sanity_check() 
+                }
+            }
+        }
         stage ('Checkout') {
             steps {
                 dir("${WORKSPACE}/code") {
@@ -198,4 +205,9 @@ pipeline {
 }
 
 
-
+def sanity_check() {
+    if (params.BRANCH_NAME.isEmpty()){
+       echo "The parameter BRANCH_NAME is not set"
+       sh 'exit 2'
+   } 
+}
