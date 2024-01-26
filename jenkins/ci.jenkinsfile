@@ -41,5 +41,16 @@ pipeline {
                 }
             }
         }
+        stage('test') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code") {
+                        sh """
+                            pwd
+                        """
+                    }
+                }
+            }
+        }
     }
 }
