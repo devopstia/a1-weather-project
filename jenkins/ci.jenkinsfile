@@ -13,7 +13,7 @@ pipeline {
         timestamps()
     }
     parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: '')
+        string(name: 'BRANCH_NAME', defaultValue: '', description: '')
     }
     stages {
         stage('Sanity Check') {
