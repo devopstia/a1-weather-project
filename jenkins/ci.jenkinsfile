@@ -2,6 +2,9 @@ pipeline {
     agent {
         label 'master'
     }
+    triggers {
+        githubPush()
+    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '7'))
         // skipDefaultCheckout(true)
