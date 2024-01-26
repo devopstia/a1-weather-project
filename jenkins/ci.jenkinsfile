@@ -167,6 +167,16 @@ pipeline {
                 }
             }
         }
+        stage('Clean Up') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code")
+                        sh """
+                            rm -rf *
+                        """
+                }
+            }
+        }
     }
     post {
         success {
@@ -203,7 +213,6 @@ pipeline {
         }   
     }
 }
-
 
 def sanity_check() {
     if (params.BRANCH_NAME.isEmpty()){
