@@ -93,12 +93,56 @@ pipeline {
                 }
             }
         }
-        stage('test') {
+        stage('Pushing Auth') {
             steps {
                 script {
                     dir("${WORKSPACE}/code") {
                         sh """
-                            pwd
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing DB') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code") {
+                        sh """
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing Redis') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code") {
+                        sh """
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing UI') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code") {
+                        sh """
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing Weather') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code") {
+                        sh """
+                            sudo docker images
                         """
                     }
                 }
