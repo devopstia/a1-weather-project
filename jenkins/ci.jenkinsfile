@@ -39,6 +39,7 @@ pipeline {
                     dir("${WORKSPACE}/code") {
                         sh """
                             ls -l
+                            pwd
                         """
                     }
                 }
