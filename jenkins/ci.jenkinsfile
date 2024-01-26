@@ -45,6 +45,54 @@ pipeline {
                 }
             }
         }
+        stage('Building DB') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code/db") {
+                        sh """
+                            cat Dockerfile
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building Redis') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code/redis") {
+                        sh """
+                            cat Dockerfile
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building UI') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code/ui") {
+                        sh """
+                            cat Dockerfile
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building Weather') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/code/weather") {
+                        sh """
+                            cat Dockerfile
+                            sudo docker images
+                        """
+                    }
+                }
+            }
+        }
         stage('test') {
             steps {
                 script {
