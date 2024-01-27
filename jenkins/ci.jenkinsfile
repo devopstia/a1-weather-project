@@ -155,6 +155,7 @@ pipeline {
                 usernameVariable: 'DOCKER_HUB_USERNAME', 
                 passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
                   sh """
+                    sudo docker logout
                     sudo docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
                   """
                   
