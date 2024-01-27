@@ -127,6 +127,7 @@ pipeline {
                 passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
                   sh """
                     sudo docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
+                    sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG}
                   """
                   
                 }
