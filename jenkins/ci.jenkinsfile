@@ -64,7 +64,6 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/auth") {
                         sh """
-                            cat Dockerfile
                             sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG} .
                             sudo docker images
                         """
@@ -77,7 +76,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/db") {
                         sh """
-                            cat Dockerfile
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.AUTH_IMAGE_TAG} .
                             sudo docker images
                         """
                     }
@@ -89,7 +88,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/redis") {
                         sh """
-                            cat Dockerfile
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.AUTH_IMAGE_TAG} .
                             sudo docker images
                         """
                     }
@@ -101,7 +100,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/ui") {
                         sh """
-                            cat Dockerfile
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.AUTH_IMAGE_TAG} .
                             sudo docker images
                         """
                     }
@@ -113,7 +112,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/weather") {
                         sh """
-                            cat Dockerfile
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.AUTH_IMAGE_TAG} .
                             sudo docker images
                         """
                     }
