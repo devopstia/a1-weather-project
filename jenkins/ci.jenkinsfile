@@ -132,12 +132,40 @@ pipeline {
                 }
             }
         }
+        stage("Login Into DEL Docker Hub"){
+             steps {
+              withCredentials([
+                usernamePassword(credentialsId: 'docker-hub-access-del', 
+                usernameVariable: 'DOCKER_HUB_USERNAME', 
+                passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                  sh """
+                    sudo docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
+                  """
+                  
+                }
+            }
+        }
+        stage('Pushing Into DEL Docker Hub') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG}
+                        """
+                    }
+                }
+            }
+        }
         stage('Pushing Auth') {
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
                             sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_TAG}
                         """
                     }
                 }
