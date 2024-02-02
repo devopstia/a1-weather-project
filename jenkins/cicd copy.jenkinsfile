@@ -1,5 +1,7 @@
 pipeline {
-    agent none
+    agent {
+        label 'master'
+    }
     triggers {
         githubPush()
     }
@@ -22,9 +24,6 @@ pipeline {
         string (name: 'DB_IMAGE_VERSION', defaultValue: 'latest', description: '')
     }
     stages {
-        agent {
-            label 'master'
-        }
         stage('Sanity Check') {
             steps {
                 script{
@@ -32,30 +31,7 @@ pipeline {
                 }
             }
         }
-        stage ('Checkout1') {
-            agent {
-                label 'master'
-            }
-            steps {
-                dir("${WORKSPACE}/application") {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${params.BRANCH_NAME}"]],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [[$class: 'LocalBranch']],
-                        submoduleCfg: [],
-                        userRemoteConfigs: [[
-                        url: 'https://github.com/devopstia/a1-weather-project.git',
-                        credentialsId: 'github-auth'
-                        ]]
-                    ])
-                }
-            }
-        }
-        stage ('Checkout2') {
-            agent {
-                label 'deploy'
-            }
+        stage ('Checkout') {
             steps {
                 dir("${WORKSPACE}/application") {
                     checkout([
@@ -73,9 +49,6 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-            agent {
-                label 'master'
-            }
             steps {
                 dir("${WORKSPACE}/application/code") {
                     script {
@@ -87,9 +60,6 @@ pipeline {
             }
         }
         stage('Building Auth') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application/code/auth") {
@@ -101,9 +71,6 @@ pipeline {
             }
         }
         stage('Building DB') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application/code/db") {
@@ -115,9 +82,6 @@ pipeline {
             }
         }
         stage('Building Redis') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application/code/redis") {
@@ -129,9 +93,6 @@ pipeline {
             }
         }
         stage('Building UI') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application/code/ui") {
@@ -143,9 +104,6 @@ pipeline {
             }
         }
         stage('Building Weather') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application/code/weather") {
@@ -157,9 +115,6 @@ pipeline {
             }
         }
         stage("Login Into Docker Hub"){
-            agent {
-                label 'master'
-            }
              steps {
               withCredentials([
                 usernamePassword(credentialsId: 'docker-hub-access', 
@@ -173,9 +128,6 @@ pipeline {
             }
         }
         stage('Pushing auth') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
@@ -187,9 +139,6 @@ pipeline {
             }
         }
         stage('Pushing DB') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
@@ -201,9 +150,6 @@ pipeline {
             }
         }
         stage('Pushing Redis') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
@@ -215,9 +161,6 @@ pipeline {
             }
         }
         stage('Pushing UI') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
@@ -229,9 +172,6 @@ pipeline {
             }
         }
         stage('Pushing Weather') {
-            agent {
-                label 'master'
-            }
             steps {
                 script {
                     dir("${WORKSPACE}/application") {
@@ -243,9 +183,6 @@ pipeline {
             }
         }
         stage('Set variables') {
-            agent {
-                label 'deploy'
-            }
             steps {
                 script {
                      dir("${WORKSPACE}/application/docker-stack") {
@@ -269,9 +206,6 @@ pipeline {
             }
         }
         stage("Pulling Images From Docker Hub"){
-             agent {
-                label 'deploy'
-            }
              steps {
               withCredentials([
                 usernamePassword(credentialsId: 'docker-hub-access', 
@@ -285,9 +219,6 @@ pipeline {
             }
         }
         stage('Deploying The Application') {
-             agent {
-                label 'deploy'
-            }
             steps {
                 script {
                      dir("${WORKSPACE}/application/docker-stack") {
@@ -299,9 +230,6 @@ pipeline {
             }
         }
         stage('Check Services') {
-             agent {
-                label 'deploy'
-            }
             steps {
                 script {
                     sh """
@@ -313,52 +241,52 @@ pipeline {
                 }
             }
         }
-        // stage('Clean Up') {
-        //     steps {
-        //         script {
-        //             dir("${WORKSPACE}/application") {
-        //                 sh """
-        //                     sudo rm -rf *
-        //                 """
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Clean Up') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo rm -rf *
+                        """
+                    }
+                }
+            }
+        }
     }
-    // post {
-    //     success {
-    //         slackSend color: '#2EB67D',
-    //         channel: 'a1-session', 
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *SUCCESS*" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }
-    //     failure {
-    //         slackSend color: '#E01E5A',
-    //         channel: 'a1-session',  
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *FAILED*" +
-    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }
-    //     unstable {
-    //         slackSend color: '#ECB22E',
-    //         channel: 'a1-session', 
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *UNSTABLE*" +
-    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }   
-    // }
+    post {
+        success {
+            slackSend color: '#2EB67D',
+            channel: 'a1-session', 
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *SUCCESS*" +
+            "\n Build url : ${env.BUILD_URL}"
+        }
+        failure {
+            slackSend color: '#E01E5A',
+            channel: 'a1-session',  
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *FAILED*" +
+            "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+            "\n Build url : ${env.BUILD_URL}"
+        }
+        unstable {
+            slackSend color: '#ECB22E',
+            channel: 'a1-session', 
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *UNSTABLE*" +
+            "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+            "\n Build url : ${env.BUILD_URL}"
+        }   
+    }
 }
 
 def settingUpVariable() {
