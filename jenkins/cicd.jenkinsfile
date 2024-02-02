@@ -218,6 +218,29 @@ pipeline {
                 }
             }
         }
+        stage('Deploying The Application') {
+            steps {
+                script {
+                     dir("${WORKSPACE}/application/docker-stack") {
+                        sh """
+                            sudo docker stack deploy -c docker-compose.yaml weather-app
+                        """
+                     }
+                }
+            }
+        }
+        stage('Check Services') {
+            steps {
+                script {
+                    sh """
+                        sleep 60
+                        sudo docker stack ls
+                        sudo docker services ls
+                        sudo docker ps
+                    """
+                }
+            }
+        }
         stage('Clean Up') {
             steps {
                 script {
