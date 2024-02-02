@@ -83,7 +83,7 @@ services:
       - "3000"
     environment:
       AUTH_HOST: auth
-      AUTH_PORT: 8080
+      AUTH_PORT: 8090
       WEATHER_HOST: weather
       WEATHER_PORT: 5000
       REDIS_USER: redis
@@ -149,14 +149,14 @@ services:
     container_name: sixfure-auth
     image: leonardtia/auth-a1:AUTH_IMAGE_VERSION
     ports:
-      - "8080:8080"
+      - "8090:8090"
     environment:
       DB_HOST: db
       DB_PASSWORD: WEATHER_APP_MYSQL_ROOT_PASSWORD
     networks:
       - sixfure
     expose:
-      - "8080"
+      - "8090"
     restart: always
     deploy:
       replicas: 1
