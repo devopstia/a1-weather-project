@@ -235,7 +235,7 @@ pipeline {
                     sh """
                         sleep 60
                         sudo docker stack ls
-                        sudo docker services ls
+                        sudo docker service ls
                         sudo docker ps
                     """
                 }
