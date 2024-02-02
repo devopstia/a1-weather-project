@@ -182,6 +182,29 @@ pipeline {
                 }
             }
         }
+        stage('Set variables') {
+            steps {
+                script {
+                     dir("${WORKSPACE}/application/docker-stack") {
+                        withCredentials([
+                        usernamePassword(credentialsId: 'weather-app-redis-cred', 
+                        usernameVariable: 'REDIS_USERNAME', 
+                        passwordVariable: 'REDIS_PASSWORD'),
+
+                        string(credentialsId: 'weather-app-api-key', 
+                        variable: 'API_TOKEN'),
+
+                        string(credentialsId: 'weather-app-mysql-root-password', 
+                        variable: 'MYSQL_ROOT_PASSWORD'),
+
+                        string(credentialsId: 'weather-app-mysql-password', 
+                        variable: 'MYSQL_PASSWORD')]) {
+                            settingUpVariable()
+                        }
+                     }
+                }
+            }
+        }
         stage('Clean Up') {
             steps {
                 script {
@@ -228,6 +251,38 @@ pipeline {
             "\n Build url : ${env.BUILD_URL}"
         }   
     }
+}
+
+def settingUpVariable() {
+    sh """
+    sed -i "s|DB_IMAGE_VERSION|${params.DB_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|REDIS_IMAGE_VERSION|${params.REDIS_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|UI_IMAGE_VERSION|${params.UI_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|WEATHER_IMAGE_VERSION|${params.WEATHER_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|AUTH_IMAGE_VERSION|${params.AUTH_IMAGE_VERSION}|g" docker-compose.yaml
+    
+    sed -i "s|WEATHER_APP_REDIS_PASSWORD_USERNAME|${REDIS_USERNAME}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_REDIS_PASSWORD|${REDIS_PASSWORD}|g" docker-compose.yaml
+    sed -i "s|WEATHER_API-TOKEN|${API_TOKEN}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_MYSQL_ROOT_PASSWORD|${MYSQL_ROOT_PASSWORD}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_MYSQL_PASSWORD|${MYSQL_PASSWORD}|g" docker-compose.yaml
+    cat docker-compose.yaml
+    """
+}
+
+def pullImages() {
+    sh """
+    sudo docker pull devopseasylearning/sixfure-db:${params.DB_IMAGE_VERSION}
+    sudo docker pull devopseasylearning/sixfure-redis:${params.REDIS_IMAGE_VERSION}
+    sudo docker pull devopseasylearning/sixfure-ui:${params.UI_IMAGE_VERSION}
+    sudo docker pull devopseasylearning/sixfure-weather:${params.WEATHER_IMAGE_VERSION}
+    sudo docker pull devopseasylearning/sixfure-auth:${params.AUTH_IMAGE_VERSION}
+    sudo docker images
+    sudo docker-compose down
+    sudo docker-compose up -d
+    sleep 15
+    sudo docker-compose ps
+    """
 }
 
 def sanity_check() {

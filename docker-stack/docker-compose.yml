@@ -1,0 +1,189 @@
+version: '3.8'
+services:
+  db:
+    container_name: sixfure-db
+    image: leonardtia/db-a1:DB_IMAGE_VERSION
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: WEATHER_APP_MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: sixfure
+      MYSQL_USER: sixfure
+      MYSQL_PASSWORD: WEATHER_APP_MYSQL_PASSWORD
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - sixfure
+    restart: always
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      # resources:
+      #   limits:
+      #     cpus: '0.5'
+      #     memory: '100M'
+      #   reservations:
+      #     cpus: '0.2'
+      #     memory: '800M'
+
+  redis:
+    container_name: sixfure-redis
+    image: leonardtia/redis-a1:REDIS_IMAGE_VERSION
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    environment:
+      REDIS_USER: WEATHER_APP_REDIS_PASSWORD_USERNAME
+      REDIS_PASSWORD: WEATHER_APP_REDIS_PASSWORD
+    volumes:
+      - redis-data:/data
+    networks:
+      - sixfure
+    restart: always
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      # resources:
+      #   limits:
+      #     cpus: '0.5'
+      #     memory: '100M'
+      #   reservations:
+      #     cpus: '0.2'
+      #     memory: '800M'
+
+  ui:
+    container_name: sixfure-ui
+    image: leonardtia/ui-a1:UI_IMAGE_VERSION
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    environment:
+      AUTH_HOST: auth
+      AUTH_PORT: 8080
+      WEATHER_HOST: weather
+      WEATHER_PORT: 5000
+      REDIS_USER: redis
+      REDIS_PASSWORD: redis
+    networks:
+      - sixfure
+    restart: always
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      # resources:
+      #   limits:
+      #     cpus: '0.5'
+      #     memory: '100M'
+      #   reservations:
+      #     cpus: '0.2'
+      #     memory: '800M'
+
+  weather:
+    container_name: sixfure-weather
+    image: leonardtia/weather-a1:WEATHER_IMAGE_VERSION
+    ports:
+      - "5000:5000"
+    expose:
+      - "5000"
+    environment:
+      APIKEY: WEATHER_API-TOKEN
+    networks:
+      - sixfure
+    restart: always
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      # resources:
+      #   limits:
+      #     cpus: '0.5'
+      #     memory: '100M'
+      #   reservations:
+      #     cpus: '0.2'
+      #     memory: '800M'
+
+  auth:
+    container_name: sixfure-auth
+    image: leonardtia/auth-a1:AUTH_IMAGE_VERSION
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: WEATHER_APP_MYSQL_ROOT_PASSWORD
+    networks:
+      - sixfure
+    expose:
+      - "8080"
+    restart: always
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      # resources:
+      #   limits:
+      #     cpus: '0.5'
+      #     memory: '100M'
+      #   reservations:
+      #     cpus: '0.2'
+      #     memory: '800M'
+
+networks:
+  sixfure:
+    driver: overlay
+volumes:
+  db-data:
+  redis-data:
+
+
