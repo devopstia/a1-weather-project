@@ -298,6 +298,20 @@ pipeline {
                 }
             }
         }
+        stage('Deploying The Prxoy') {
+             agent {
+                label 'deploy'
+            }
+            steps {
+                script {
+                     dir("${WORKSPACE}/application/tools") {
+                        sh """
+                            sudo docker stack deploy -c docker-compose.yaml tools
+                        """
+                     }
+                }
+            }
+        }
         stage('Check Services') {
              agent {
                 label 'deploy'
@@ -313,52 +327,55 @@ pipeline {
                 }
             }
         }
-        // stage('Clean Up') {
-        //     steps {
-        //         script {
-        //             dir("${WORKSPACE}/application") {
-        //                 sh """
-        //                     sudo rm -rf *
-        //                 """
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Clean Up') {
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo rm -rf *
+                        """
+                    }
+                }
+            }
+        }
     }
-    // post {
-    //     success {
-    //         slackSend color: '#2EB67D',
-    //         channel: 'a1-session', 
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *SUCCESS*" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }
-    //     failure {
-    //         slackSend color: '#E01E5A',
-    //         channel: 'a1-session',  
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *FAILED*" +
-    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }
-    //     unstable {
-    //         slackSend color: '#ECB22E',
-    //         channel: 'a1-session', 
-    //         message: "*Weather App Project Build Status*" +
-    //         "\n Project Name: Weather App" +
-    //         "\n Job Name: ${env.JOB_NAME}" +
-    //         "\n Build number: ${currentBuild.displayName}" +
-    //         "\n Build Status : *UNSTABLE*" +
-    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
-    //         "\n Build url : ${env.BUILD_URL}"
-    //     }   
-    // }
+    post {
+        agent {
+                label 'deploy'
+            }
+        success {
+            slackSend color: '#2EB67D',
+            channel: 'a1-session', 
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *SUCCESS*" +
+            "\n Build url : ${env.BUILD_URL}"
+        }
+        failure {
+            slackSend color: '#E01E5A',
+            channel: 'a1-session',  
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *FAILED*" +
+            "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+            "\n Build url : ${env.BUILD_URL}"
+        }
+        unstable {
+            slackSend color: '#ECB22E',
+            channel: 'a1-session', 
+            message: "*Weather App Project Build Status*" +
+            "\n Project Name: Weather App" +
+            "\n Job Name: ${env.JOB_NAME}" +
+            "\n Build number: ${currentBuild.displayName}" +
+            "\n Build Status : *UNSTABLE*" +
+            "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+            "\n Build url : ${env.BUILD_URL}"
+        }   
+    }
 }
 
 def settingUpVariable() {
