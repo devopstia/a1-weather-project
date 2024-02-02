@@ -1,0 +1,396 @@
+pipeline {
+    agent none
+    triggers {
+        githubPush()
+    }
+    environment {
+        DOCKER_HUB_REGISTRY = "leonardtia"
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '7'))
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timeout (time: 30, unit: 'MINUTES')
+        timestamps()
+    }
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: '')
+        string (name: 'UI_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'AUTH_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'WEATHER_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'REDIS_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'DB_IMAGE_VERSION', defaultValue: 'latest', description: '')
+    }
+    stages {
+        stage('Sanity Check') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script{
+                   sanity_check() 
+                }
+            }
+        }
+        stage ('Checkout1') {
+            agent {
+                label 'master'
+            }
+            steps {
+                dir("${WORKSPACE}/application") {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${params.BRANCH_NAME}"]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [[$class: 'LocalBranch']],
+                        submoduleCfg: [],
+                        userRemoteConfigs: [[
+                        url: 'https://github.com/devopstia/a1-weather-project.git',
+                        credentialsId: 'github-auth'
+                        ]]
+                    ])
+                }
+            }
+        }
+        stage ('Checkout2') {
+            agent {
+                label 'deploy'
+            }
+            steps {
+                dir("${WORKSPACE}/application") {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${params.BRANCH_NAME}"]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [[$class: 'LocalBranch']],
+                        submoduleCfg: [],
+                        userRemoteConfigs: [[
+                        url: 'https://github.com/devopstia/a1-weather-project.git',
+                        credentialsId: 'github-auth'
+                        ]]
+                    ])
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            agent {
+                label 'master'
+            }
+            steps {
+                dir("${WORKSPACE}/application/code") {
+                    script {
+                        withSonarQubeEnv('SonarScanner') {
+                            sh "sonar-scanner"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Building Auth') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application/code/auth") {
+                        sh """
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_VERSION} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building DB') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application/code/db") {
+                        sh """
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_VERSION} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building Redis') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application/code/redis") {
+                        sh """
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_VERSION} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building UI') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application/code/ui") {
+                        sh """
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_VERSION} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Building Weather') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application/code/weather") {
+                        sh """
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_VERSION} .
+                        """
+                    }
+                }
+            }
+        }
+        stage("Login Into Docker Hub"){
+            agent {
+                label 'master'
+            }
+             steps {
+              withCredentials([
+                usernamePassword(credentialsId: 'docker-hub-access', 
+                usernameVariable: 'DOCKER_HUB_USERNAME', 
+                passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                  sh """
+                    sudo docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
+                  """
+                  
+                }
+            }
+        }
+        stage('Pushing auth') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_VERSION}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing DB') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_VERSION}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing Redis') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_VERSION}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing UI') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_VERSION}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Pushing Weather') {
+            agent {
+                label 'master'
+            }
+            steps {
+                script {
+                    dir("${WORKSPACE}/application") {
+                        sh """
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_VERSION}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Set variables') {
+            agent {
+                label 'deploy'
+            }
+            steps {
+                script {
+                     dir("${WORKSPACE}/application/docker-stack") {
+                        withCredentials([
+                        usernamePassword(credentialsId: 'weather-app-redis-cred', 
+                        usernameVariable: 'REDIS_USERNAME', 
+                        passwordVariable: 'REDIS_PASSWORD'),
+
+                        string(credentialsId: 'weather-app-api-key', 
+                        variable: 'API_TOKEN'),
+
+                        string(credentialsId: 'weather-app-mysql-root-password', 
+                        variable: 'MYSQL_ROOT_PASSWORD'),
+
+                        string(credentialsId: 'weather-app-mysql-password', 
+                        variable: 'MYSQL_PASSWORD')]) {
+                            settingUpVariable()
+                        }
+                     }
+                }
+            }
+        }
+        stage("Pulling Images From Docker Hub"){
+             agent {
+                label 'deploy'
+            }
+             steps {
+              withCredentials([
+                usernamePassword(credentialsId: 'docker-hub-access', 
+                usernameVariable: 'DOCKER_HUB_USERNAME', 
+                passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                  sh """
+                    sudo docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
+                  """
+                  pullImages()
+                }
+            }
+        }
+        stage('Deploying The Application') {
+             agent {
+                label 'deploy'
+            }
+            steps {
+                script {
+                     dir("${WORKSPACE}/application/docker-stack") {
+                        sh """
+                            sudo docker stack deploy -c docker-compose.yaml weather-app
+                        """
+                     }
+                }
+            }
+        }
+        stage('Check Services') {
+             agent {
+                label 'deploy'
+            }
+            steps {
+                script {
+                    sh """
+                        sleep 60
+                        sudo docker stack ls
+                        sudo docker service ls
+                        sudo docker ps
+                    """
+                }
+            }
+        }
+        // stage('Clean Up') {
+        //     steps {
+        //         script {
+        //             dir("${WORKSPACE}/application") {
+        //                 sh """
+        //                     sudo rm -rf *
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
+    }
+    // post {
+    //     success {
+    //         slackSend color: '#2EB67D',
+    //         channel: 'a1-session', 
+    //         message: "*Weather App Project Build Status*" +
+    //         "\n Project Name: Weather App" +
+    //         "\n Job Name: ${env.JOB_NAME}" +
+    //         "\n Build number: ${currentBuild.displayName}" +
+    //         "\n Build Status : *SUCCESS*" +
+    //         "\n Build url : ${env.BUILD_URL}"
+    //     }
+    //     failure {
+    //         slackSend color: '#E01E5A',
+    //         channel: 'a1-session',  
+    //         message: "*Weather App Project Build Status*" +
+    //         "\n Project Name: Weather App" +
+    //         "\n Job Name: ${env.JOB_NAME}" +
+    //         "\n Build number: ${currentBuild.displayName}" +
+    //         "\n Build Status : *FAILED*" +
+    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+    //         "\n Build url : ${env.BUILD_URL}"
+    //     }
+    //     unstable {
+    //         slackSend color: '#ECB22E',
+    //         channel: 'a1-session', 
+    //         message: "*Weather App Project Build Status*" +
+    //         "\n Project Name: Weather App" +
+    //         "\n Job Name: ${env.JOB_NAME}" +
+    //         "\n Build number: ${currentBuild.displayName}" +
+    //         "\n Build Status : *UNSTABLE*" +
+    //         "\n Action : Please check the console output to fix this job IMMEDIATELY" +
+    //         "\n Build url : ${env.BUILD_URL}"
+    //     }   
+    // }
+}
+
+def settingUpVariable() {
+    sh """
+    sed -i "s|DB_IMAGE_VERSION|${params.DB_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|REDIS_IMAGE_VERSION|${params.REDIS_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|UI_IMAGE_VERSION|${params.UI_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|WEATHER_IMAGE_VERSION|${params.WEATHER_IMAGE_VERSION}|g" docker-compose.yaml
+    sed -i "s|AUTH_IMAGE_VERSION|${params.AUTH_IMAGE_VERSION}|g" docker-compose.yaml
+    
+    sed -i "s|WEATHER_APP_REDIS_PASSWORD_USERNAME|${REDIS_USERNAME}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_REDIS_PASSWORD|${REDIS_PASSWORD}|g" docker-compose.yaml
+    sed -i "s|WEATHER_API-TOKEN|${API_TOKEN}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_MYSQL_ROOT_PASSWORD|${MYSQL_ROOT_PASSWORD}|g" docker-compose.yaml
+    sed -i "s|WEATHER_APP_MYSQL_PASSWORD|${MYSQL_PASSWORD}|g" docker-compose.yaml
+    cat docker-compose.yaml
+    """
+}
+
+def pullImages() {
+    sh """
+    sudo docker pull ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_VERSION}
+    sudo docker pull ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_VERSION}
+    sudo docker pull ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_VERSION}
+    sudo docker pull ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_VERSION}
+    sudo docker pull ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_VERSION}
+    """
+}
+
+def sanity_check() {
+    if (params.BRANCH_NAME.isEmpty()){
+       echo "The parameter BRANCH_NAME is not set"
+       sh 'exit 2'
+   } 
+}

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    environment:
+      DB_MYSQL_HOST: "db"
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: "npm"
+      DB_MYSQL_PASSWORD: "npm"
+      DB_MYSQL_NAME: "npm"
+      # Set default admin credentials
+      INITIAL_USERNAME: "admin@example.com"
+      INITIAL_PASSWORD: "changeme"
+    networks:
+      - devops_tools
+    volumes:
+      - data:/data
+      - letsencrypt:/etc/letsencrypt
+    depends_on:
+      - db
+    deploy:
+      replicas: 1
+      placement:
+        # constraints: [ node.role == worker, node.role == manager ] 
+        constraints: [ node.role == manager ]
+  db:
+    image: 'jc21/mariadb-aria:latest'
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 'npm'
+      MYSQL_DATABASE: 'npm'
+      MYSQL_USER: 'npm'
+      MYSQL_PASSWORD: 'npm'
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - devops_tools
+    deploy:
+      replicas: 1
+      placement:
+        # constraints: [ node.role == worker, node.role == manager ] 
+        constraints: [ node.role == manager ]
+networks:
+  devops_tools:
+    driver: overlay
+volumes:
+  data:
+  letsencrypt:
+  mysql:
+
+
