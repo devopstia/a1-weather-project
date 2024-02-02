@@ -17,11 +17,11 @@ pipeline {
     }
     parameters {
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: '')
-        string (name: 'UI_IMAGE_TAG', defaultValue: 'latest', description: '')
-        string (name: 'AUTH_IMAGE_TAG', defaultValue: 'latest', description: '')
-        string (name: 'WEATHER_IMAGE_TAG', defaultValue: 'latest', description: '')
-        string (name: 'REDIS_IMAGE_TAG', defaultValue: 'latest', description: '')
-        string (name: 'DB_IMAGE_TAG', defaultValue: 'latest', description: '')
+        string (name: 'UI_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'AUTH_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'WEATHER_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'REDIS_IMAGE_VERSION', defaultValue: 'latest', description: '')
+        string (name: 'DB_IMAGE_VERSION', defaultValue: 'latest', description: '')
     }
     stages {
         stage('Sanity Check') {
@@ -64,7 +64,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/auth") {
                         sh """
-                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG} .
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_VERSION} .
                         """
                     }
                 }
@@ -75,7 +75,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/db") {
                         sh """
-                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_TAG} .
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_VERSION} .
                         """
                     }
                 }
@@ -86,7 +86,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/redis") {
                         sh """
-                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_TAG} .
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_VERSION} .
                         """
                     }
                 }
@@ -97,7 +97,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/ui") {
                         sh """
-                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_TAG} .
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_VERSION} .
                         """
                     }
                 }
@@ -108,7 +108,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application/code/weather") {
                         sh """
-                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_TAG} .
+                            sudo docker build -t ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_VERSION} .
                         """
                     }
                 }
@@ -132,7 +132,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/auth-a1:${params.AUTH_IMAGE_VERSION}
                         """
                     }
                 }
@@ -143,7 +143,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/db-a1:${params.DB_IMAGE_VERSION}
                         """
                     }
                 }
@@ -154,7 +154,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/redis-a1:${params.REDIS_IMAGE_VERSION}
                         """
                     }
                 }
@@ -165,7 +165,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/ui-a1:${params.UI_IMAGE_VERSION}
                         """
                     }
                 }
@@ -176,7 +176,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_TAG}
+                            sudo docker push ${env.DOCKER_HUB_REGISTRY}/weather-a1:${params.WEATHER_IMAGE_VERSION}
                         """
                     }
                 }
