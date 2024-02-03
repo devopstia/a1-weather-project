@@ -332,7 +332,7 @@ pipeline {
                 script {
                     dir("${WORKSPACE}/application") {
                         sh """
-                            sudo rm -rf *
+                            ls
                         """
                     }
                 }
