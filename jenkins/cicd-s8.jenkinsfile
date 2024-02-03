@@ -330,11 +330,7 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
-                    dir("${WORKSPACE}/application") {
-                        sh """
-                            ls
-                        """
-                    }
+                    sh "ls -l"
                 }
             }
         }
