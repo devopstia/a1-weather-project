@@ -333,7 +333,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh "ls -l"
+                    sh "ls"
                 }
             }
         }
