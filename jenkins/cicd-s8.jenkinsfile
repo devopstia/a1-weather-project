@@ -328,6 +328,9 @@ pipeline {
             }
         }
         stage('Clean Up') {
+            agent {
+                label 'deploy'
+            }
             steps {
                 script {
                     sh "ls -l"
